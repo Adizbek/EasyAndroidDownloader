@@ -13,16 +13,14 @@ class DownloadPool(
         if (!hasFreePool)
             return
 
-        val request = manager.getDownloadRequestFromQueue()
-
-        if (request == null) {
-            return
-        }
+        val request = manager.getDownloadRequestFromQueue() ?: return
 
         val job = GlobalScope.launch {
             request.download(manager)
 
             lookupAndDownload()
+
+            downloading.remove(request)
         }
 
         downloading[request] = job
