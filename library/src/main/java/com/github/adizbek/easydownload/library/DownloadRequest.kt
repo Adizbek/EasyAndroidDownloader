@@ -5,7 +5,7 @@ import okhttp3.ResponseBody
 import java.io.File
 
 class DownloadRequest(
-    private val url: String,
+    val url: String,
     private val savePath: File,
     private val callback: DownloadCallback
 ) {
