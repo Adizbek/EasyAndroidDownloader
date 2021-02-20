@@ -1,11 +1,11 @@
 package com.github.adizbek.easydownload.library
 
 interface DownloadCallback {
-    fun onStart()
+    fun onDownloadStart()
 
-    fun onError(error: Throwable)
+    fun onDownloadError(error: Throwable)
 
-    fun onProgress(downloaded: Long, totalBytes: Long)
+    fun onDownloadProgress(downloaded: Long, totalBytes: Long)
 
-    fun onEnd()
+    fun onDownloadEnd()
 }

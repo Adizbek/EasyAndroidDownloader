@@ -3,33 +3,41 @@ package com.github.adizbek.easydownload.library
 import okhttp3.Request
 import okhttp3.ResponseBody
 import java.io.File
-import java.lang.Exception
 
 class DownloadRequest(
-        private val url: String,
-        private val savePath: File,
-        private val callback: DownloadCallback
+    private val url: String,
+    private val savePath: File,
+    private val callback: DownloadCallback
 ) {
+    var forceDownload = false
 
     fun download(manager: DownloadManager) {
-        val httpRequest = Request.Builder()
-                .url(url)
-                .build()
-
-        callback.onStart()
-
         try {
-            val response = manager.client.newCall(httpRequest)
-                    .execute()
+            callback.onDownloadStart()
 
-            response.body?.let {
-                readBody(manager, it)
+            if (hasFileAlreadyDownloaded()) {
+                callback.onDownloadProgress(savePath.length(), savePath.length())
+            } else {
+                processDownload(manager)
             }
-        } catch (e: Exception) {
-            callback.onError(e)
-        }
 
-        callback.onEnd()
+            callback.onDownloadEnd()
+        } catch (e: Exception) {
+            callback.onDownloadError(e)
+        }
+    }
+
+    private fun processDownload(manager: DownloadManager) {
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        val response = manager.client.newCall(request)
+            .execute()
+
+        response.body?.let {
+            readBody(manager, it)
+        }
     }
 
     private fun readBody(manager: DownloadManager, body: ResponseBody) {
@@ -39,15 +47,21 @@ class DownloadRequest(
 
             body.source().inputStream().copyToWithProgress(it) { totalCopied, copiedNow ->
                 if (System.currentTimeMillis() - notifyTime >= manager.notifyDownloadProgressInterval) {
-                    callback.onProgress(totalCopied, totalBytes)
+                    callback.onDownloadProgress(totalCopied, totalBytes)
 
                     notifyTime = System.currentTimeMillis()
                 }
             }
 
             // send the latest progress as all downloaded
-            callback.onProgress(totalBytes, totalBytes)
+            callback.onDownloadProgress(totalBytes, totalBytes)
         }
     }
 
+    private fun hasFileAlreadyDownloaded(): Boolean {
+        if (forceDownload)
+            return false
+
+        return savePath.exists() && savePath.isFile
+    }
 }

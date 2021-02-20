@@ -3,7 +3,7 @@ package com.github.adizbek.easydownload.library
 import okhttp3.OkHttpClient
 import kotlin.math.max
 
-class DownloadManager(val client: OkHttpClient) {
+class DownloadManager(val client: OkHttpClient = OkHttpClient()) {
     private val queue = ArrayList<DownloadRequest>()
     private val pool = DownloadPool(this)
 
