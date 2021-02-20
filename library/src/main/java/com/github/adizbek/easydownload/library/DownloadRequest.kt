@@ -41,6 +41,12 @@ class DownloadRequest(
     }
 
     private fun readBody(manager: DownloadManager, body: ResponseBody) {
+        val folder = savePath.parentFile ?: throw Exception("Has no folder")
+
+        if (!folder.exists()) {
+            folder.mkdirs()
+        }
+
         savePath.outputStream().use {
             var notifyTime = System.currentTimeMillis()
             val totalBytes = body.contentLength()
