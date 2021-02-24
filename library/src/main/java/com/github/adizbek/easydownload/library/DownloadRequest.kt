@@ -94,6 +94,7 @@ class DownloadRequest(
 
     fun cancel() {
         call?.cancel()
+        savePath.delete()
         callback.onDownloadCancel()
     }
 }
