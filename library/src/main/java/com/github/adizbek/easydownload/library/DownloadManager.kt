@@ -12,9 +12,9 @@ class DownloadManager(val client: OkHttpClient = OkHttpClient()) {
     private val downloading = hashMapOf<DownloadRequest, Job>()
     private val poolSize: Int = 4
 
-    var notifyDownloadProgressInterval = 30
+    var notifyDownloadProgressInterval = 50
         set(value) {
-            field = max(value, 30)
+            field = max(value, 50)
         }
 
 
@@ -54,6 +54,7 @@ class DownloadManager(val client: OkHttpClient = OkHttpClient()) {
             downloading[download]?.cancel("Interrupted by user")
 
             downloading.remove(download)
+            download.cancel()
         }
     }
 

@@ -41,16 +41,20 @@ class MainActivity : AppCompatActivity(), DownloadCallback {
         Log.d(TAG, "onDownloadError: ${error.localizedMessage}")
     }
 
-    override fun onDownloadProgress(downloaded: Long, totalBytes: Long) {
-        Log.d(TAG, "onDownloadProgress: ${downloaded}/${totalBytes}")
+    override fun onDownloadProgress(downloaded: Long, totalBytes: Long, speed: Long) {
+        Log.d(TAG, "onDownloadProgress: ${downloaded}/${totalBytes}, speed: $speed")
 
         runOnUiThread {
-            progress.text = "${downloaded}/${totalBytes}"
+            progress.text = "${downloaded}/${totalBytes}, speed: $speed kb/s"
         }
     }
 
     override fun onDownloadEnd() {
         Log.d(TAG, "onDownloadEnd")
+    }
+
+    override fun onDownloadCancel() {
+        Log.d(TAG, "onDownloadCancel")
     }
 
 

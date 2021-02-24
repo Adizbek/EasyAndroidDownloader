@@ -5,7 +5,9 @@ interface DownloadCallback {
 
     fun onDownloadError(error: Throwable)
 
-    fun onDownloadProgress(downloaded: Long, totalBytes: Long)
+    fun onDownloadProgress(downloaded: Long, totalBytes: Long, speed: Long)
 
     fun onDownloadEnd()
+
+    fun onDownloadCancel()
 }

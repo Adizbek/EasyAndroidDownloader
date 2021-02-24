@@ -3,6 +3,7 @@ package com.github.adizbek.easydownload.library
 import okhttp3.Request
 import okhttp3.ResponseBody
 import java.io.File
+import kotlin.math.abs
 
 class DownloadRequest(
     val url: String,
@@ -16,7 +17,7 @@ class DownloadRequest(
             callback.onDownloadStart()
 
             if (hasFileAlreadyDownloaded()) {
-                callback.onDownloadProgress(savePath.length(), savePath.length())
+                callback.onDownloadProgress(savePath.length(), savePath.length(), 0)
             } else {
                 processDownload(manager)
             }
@@ -50,17 +51,22 @@ class DownloadRequest(
         savePath.outputStream().use {
             var notifyTime = System.currentTimeMillis()
             val totalBytes = body.contentLength()
+            var lastDownloadedBytes = 0L
 
             body.source().inputStream().copyToWithProgress(it) { totalCopied, copiedNow ->
-                if (System.currentTimeMillis() - notifyTime >= manager.notifyDownloadProgressInterval) {
-                    callback.onDownloadProgress(totalCopied, totalBytes)
+                val timeDiff = System.currentTimeMillis() - notifyTime
+
+                if (timeDiff >= manager.notifyDownloadProgressInterval) {
+                    val speed = abs(totalCopied - lastDownloadedBytes) * 1_000 / timeDiff
+                    callback.onDownloadProgress(totalCopied, totalBytes, speed / 1024)
 
                     notifyTime = System.currentTimeMillis()
+                    lastDownloadedBytes = totalCopied
                 }
             }
 
             // send the latest progress as all downloaded
-            callback.onDownloadProgress(totalBytes, totalBytes)
+            callback.onDownloadProgress(totalBytes, totalBytes, 0)
         }
     }
 
@@ -69,5 +75,9 @@ class DownloadRequest(
             return false
 
         return savePath.exists() && savePath.isFile
+    }
+
+    fun cancel() {
+        callback.onDownloadCancel()
     }
 }
