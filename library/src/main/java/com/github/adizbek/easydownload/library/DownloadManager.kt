@@ -1,9 +1,6 @@
 package com.github.adizbek.easydownload.library
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import kotlin.math.max
 
@@ -38,7 +35,7 @@ class DownloadManager(val client: OkHttpClient = OkHttpClient()) {
 
         val request = getDownloadRequestFromQueue() ?: return
 
-        val job = GlobalScope.launch {
+        val job = GlobalScope.launch(Dispatchers.IO) {
             request.download(this@DownloadManager)
 
             lookupAndDownload()
@@ -51,14 +48,14 @@ class DownloadManager(val client: OkHttpClient = OkHttpClient()) {
 
     fun cancelDownload(download: DownloadRequest) {
         if (downloading.containsKey(download)) {
+            download.cancel()
             downloading[download]?.cancel("Interrupted by user")
 
             downloading.remove(download)
-            download.cancel()
         }
     }
 
-    fun cancelByUrl(url:String) {
+    fun cancelByUrl(url: String) {
         downloading.keys.firstOrNull { it.url == url }?.let {
             cancelDownload(it)
         }

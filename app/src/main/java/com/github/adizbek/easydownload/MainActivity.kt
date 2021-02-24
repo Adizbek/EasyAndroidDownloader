@@ -1,6 +1,7 @@
 package com.github.adizbek.easydownload
 
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -22,14 +23,21 @@ class MainActivity : AppCompatActivity(), DownloadCallback {
 
         progress = findViewById(R.id.progress)
 
+        val download = DownloadRequest(
+            "https://www.learningcontainer.com/download/sample-pdf-download-10-mb/?wpdmdl=1569&refresh=60369f72132871614192498",
+            File(externalCacheDir, "remote/1file.txt"),
+            this
+        ).apply {
+            forceDownload = true
+        }
+
         downloadManager.queueDownload(
-            DownloadRequest(
-                "https://gist.githubusercontent.com/khaykov/a6105154becce4c0530da38e723c2330/raw/41ab415ac41c93a198f7da5b47d604956157c5c3/gistfile1.txt",
-                File(externalCacheDir, "remote/1file.txt"),
-                this
-            ).apply {
-                forceDownload = true
-            }
+            download
+        )
+
+        Handler().postDelayed(
+            { downloadManager.cancelByUrl(download.url) },
+            2000
         )
     }
 

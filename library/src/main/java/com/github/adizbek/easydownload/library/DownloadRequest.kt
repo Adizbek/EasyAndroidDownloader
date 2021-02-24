@@ -1,8 +1,10 @@
 package com.github.adizbek.easydownload.library
 
-import okhttp3.Request
-import okhttp3.ResponseBody
+import okhttp3.*
 import java.io.File
+import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.abs
 
 class DownloadRequest(
@@ -11,8 +13,9 @@ class DownloadRequest(
     private val callback: DownloadCallback
 ) {
     var forceDownload = false
+    private var call: Call? = null
 
-    fun download(manager: DownloadManager) {
+    suspend fun download(manager: DownloadManager) {
         try {
             callback.onDownloadStart()
 
@@ -28,16 +31,28 @@ class DownloadRequest(
         }
     }
 
-    private fun processDownload(manager: DownloadManager) {
+    private suspend fun processDownload(manager: DownloadManager) {
         val request = Request.Builder()
             .url(url)
             .build()
 
-        val response = manager.client.newCall(request)
-            .execute()
+        call = manager.client.newCall(request)
 
-        response.body?.let {
-            readBody(manager, it)
+
+        suspendCoroutine<Any> { promise->
+            call?.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    promise.resume(0)
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.body?.let {
+                        readBody(manager, it)
+                    }
+
+                    promise.resume(1)
+                }
+            })
         }
     }
 
@@ -78,6 +93,7 @@ class DownloadRequest(
     }
 
     fun cancel() {
+        call?.cancel()
         callback.onDownloadCancel()
     }
 }
