@@ -1,5 +1,6 @@
-package com.github.adizbek.easydownload.library
+package com.github.adizbek.easydownload.library.download
 
+import com.github.adizbek.easydownload.library.helpers.copyToWithProgress
 import okhttp3.*
 import java.io.File
 import java.io.IOException

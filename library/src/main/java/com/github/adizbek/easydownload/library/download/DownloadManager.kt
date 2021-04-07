@@ -1,4 +1,4 @@
-package com.github.adizbek.easydownload.library
+package com.github.adizbek.easydownload.library.download
 
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient

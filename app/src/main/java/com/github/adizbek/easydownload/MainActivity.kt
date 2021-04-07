@@ -5,9 +5,9 @@ import android.os.Handler
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.github.adizbek.easydownload.library.DownloadCallback
-import com.github.adizbek.easydownload.library.DownloadManager
-import com.github.adizbek.easydownload.library.DownloadRequest
+import com.github.adizbek.easydownload.library.download.DownloadCallback
+import com.github.adizbek.easydownload.library.download.DownloadManager
+import com.github.adizbek.easydownload.library.download.DownloadRequest
 import java.io.File
 
 const val TAG = "DOWNLOAD MNG"

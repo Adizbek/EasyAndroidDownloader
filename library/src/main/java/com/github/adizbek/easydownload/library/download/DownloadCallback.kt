@@ -1,4 +1,4 @@
-package com.github.adizbek.easydownload.library
+package com.github.adizbek.easydownload.library.download
 
 interface DownloadCallback {
     fun onDownloadStart()
