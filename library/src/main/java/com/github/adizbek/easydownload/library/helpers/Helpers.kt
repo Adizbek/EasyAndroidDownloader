@@ -18,3 +18,18 @@ fun InputStream.copyToWithProgress(
     }
     return bytesCopied
 }
+
+class RunWithInterval(private val intervalMs: Int) {
+    private var lastRun = 0L
+    var current = 0L
+
+    fun process(runnable: Runnable) {
+        current = System.currentTimeMillis()
+
+        if (current - lastRun >= intervalMs) {
+            runnable.run()
+
+            lastRun = current
+        }
+    }
+}

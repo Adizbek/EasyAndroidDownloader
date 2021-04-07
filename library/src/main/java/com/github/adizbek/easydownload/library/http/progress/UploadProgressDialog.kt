@@ -6,15 +6,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import com.github.adizbek.easydownload.library.R
 import com.github.adizbek.easydownload.library.helpers.toMultiPartData
 import com.github.adizbek.easydownload.library.helpers.toPrettyBytes
 import kotlinx.android.synthetic.main.multi_part_progress_dialog.view.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 
 
-class MultiPartProgressDialog(
+class UploadProgressDialog(
     private val onCancel: (() -> Unit)?
 ) : DialogFragment(), OnMultiPartUploadProgress {
 
@@ -41,9 +48,11 @@ class MultiPartProgressDialog(
 
         view.cancel_action.setOnClickListener {
             onCancel?.invoke()
+            dialog?.dismiss()
         }
     }
 
+    @UiThread
     override fun progress(
         currentFileIndex: Int,
         filesAmount: Int,
@@ -54,21 +63,47 @@ class MultiPartProgressDialog(
         currentProgress: Int,
         totalProgress: Int,
     ) {
-        view?.apply {
-            tv_filename.text = _progress.getPartFileName(currentFileIndex)
-            progress.progress = currentProgress
-            files_count.text = "${currentFileIndex + 1} / $filesAmount"
-            bytes_count.text =
-                "${currentFileRead.toPrettyBytes} / ${currentFileTotal.toPrettyBytes}"
+        activity?.runOnUiThread {
+            view?.apply {
+                tv_filename.text = _progress.getPartFileName(currentFileIndex)
+                progress.progress = currentProgress
+                files_count.text = "${currentFileIndex + 1} / $filesAmount"
+                bytes_count.text =
+                    "${currentFileRead.toPrettyBytes} / ${currentFileTotal.toPrettyBytes}"
+            }
         }
     }
 
     override fun onFinished() {
-        dismiss()
+        dialog?.dismiss()
     }
 
-    fun uploadWithProgress(uri: Uri, partName: String = "file"): MultipartBody.Part {
+    fun trackProgress(uri: Uri, partName: String = "file"): MultipartBody.Part {
         return uri.toMultiPartData(partName, _progress)
     }
 
+}
+
+fun AppCompatActivity.uploadWithProgressDialog(
+    build: (suspend (UploadProgressDialog) -> Unit),
+) {
+    uploadWithProgressDialog(build, null)
+}
+
+fun AppCompatActivity.uploadWithProgressDialog(
+    build: (suspend (UploadProgressDialog) -> Unit),
+    onCancel: (() -> Unit)? = null,
+    fragmentTag: String? = "UploadProgressDialog",
+) {
+    this.lifecycleScope.launch {
+        UploadProgressDialog {
+            cancel()
+
+            onCancel?.invoke()
+        }.apply {
+            show(this@uploadWithProgressDialog.supportFragmentManager, fragmentTag)
+
+            build(this@apply)
+        }
+    }
 }

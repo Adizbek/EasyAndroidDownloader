@@ -44,6 +44,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.activity:activity-ktx:1.2.2'
 
     api("com.squareup.okhttp3:okhttp:4.9.0")
     api("com.blankj:utilcodex:1.29.0")

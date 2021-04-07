@@ -1,5 +1,7 @@
 package com.github.adizbek.easydownload.library.http.progress
 
+import com.github.adizbek.easydownload.library.helpers.RunWithInterval
+
 interface OnMultiPartUploadProgress {
     fun progress(
         currentFileIndex: Int, filesAmount: Int,
@@ -21,6 +23,7 @@ class MultiPartUploadProgress(
     private var allFilesTotalRead = 0L
 
     private var finishedFiles = 0
+    private var runWithInterval = RunWithInterval(50)
 
     fun attach(part: FileDataRequestBody) {
         part.progressListener = this
@@ -34,13 +37,15 @@ class MultiPartUploadProgress(
     override fun onProgress(part: FileDataRequestBody, now: Int, written: Long, total: Long) {
         allFilesRead += now
 
-        listener.progress(
-            parts.indexOf(part), totalFiles,
-            written, total,
-            allFilesRead, allFilesTotalRead,
-            kotlin.math.max((written * 100 / total).toInt(), 100),
-            kotlin.math.max((allFilesRead * 100 / allFilesTotalRead).toInt(), 100),
-        )
+        runWithInterval.process {
+            listener.progress(
+                parts.indexOf(part), totalFiles,
+                written, total,
+                allFilesRead, allFilesTotalRead,
+                kotlin.math.min((written * 100 / total).toInt(), 100),
+                kotlin.math.min((allFilesRead * 100 / allFilesTotalRead).toInt(), 100),
+            )
+        }
     }
 
     override fun onFinished(part: FileDataRequestBody) {
