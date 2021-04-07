@@ -12,21 +12,32 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.github.adizbek.easydownload.library.R
 import com.github.adizbek.easydownload.library.helpers.toMultiPartData
 import com.github.adizbek.easydownload.library.helpers.toPrettyBytes
 import kotlinx.android.synthetic.main.multi_part_progress_dialog.view.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MultipartBody
 
+private data class ProgressData(
+    val currentFileIndex: Int = 0,
+    val currentFileRead: Long = 0,
+    val currentFileTotal: Long = 0,
+    val currentProgress: Int = 0,
+    val filesAmount: Int = 0
+)
 
 class UploadProgressDialog(
     private val onCancel: (() -> Unit)?
 ) : DialogFragment(), OnMultiPartUploadProgress {
 
     private val _progress = MultiPartUploadProgress(this)
+
+    private val progressLiveData = MutableLiveData(ProgressData())
 
     override fun onStart() {
         super.onStart()
@@ -51,6 +62,16 @@ class UploadProgressDialog(
             onCancel?.invoke()
             dialog?.dismiss()
         }
+
+        progressLiveData.observe(this) {
+            view.apply {
+                tv_filename.text = _progress.getPartFileName(it.currentFileIndex)
+                progress.progress = it.currentProgress
+                files_count.text = "${it.currentFileIndex + 1} / ${it.filesAmount}"
+                bytes_count.text =
+                    "${it.currentFileRead.toPrettyBytes} / ${it.currentFileTotal.toPrettyBytes}"
+            }
+        }
     }
 
     @UiThread
@@ -64,15 +85,15 @@ class UploadProgressDialog(
         currentProgress: Int,
         totalProgress: Int,
     ) {
-        activity?.runOnUiThread {
-            view?.apply {
-                tv_filename.text = _progress.getPartFileName(currentFileIndex)
-                progress.progress = currentProgress
-                files_count.text = "${currentFileIndex + 1} / $filesAmount"
-                bytes_count.text =
-                    "${currentFileRead.toPrettyBytes} / ${currentFileTotal.toPrettyBytes}"
-            }
-        }
+        progressLiveData.postValue(
+            ProgressData(
+                currentFileIndex,
+                currentFileRead,
+                currentFileTotal,
+                currentProgress,
+                filesAmount
+            )
+        )
     }
 
     override fun onFinished() {
@@ -92,7 +113,7 @@ private fun launchProgressDialog(
     onCancel: (() -> Unit)? = null,
     fragmentTag: String? = "UploadProgressDialog",
 ) {
-    lifecycleScope.launch {
+    lifecycleScope.launchWhenStarted {
         UploadProgressDialog {
             cancel()
 
@@ -100,7 +121,9 @@ private fun launchProgressDialog(
         }.apply {
             show(fragmentManager, fragmentTag)
 
-            build(this@apply)
+            withContext(Dispatchers.IO) {
+                build(this@apply)
+            }
         }
     }
 }
