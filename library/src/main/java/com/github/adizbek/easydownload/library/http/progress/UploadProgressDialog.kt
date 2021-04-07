@@ -9,6 +9,7 @@ import android.view.WindowManager
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
@@ -84,26 +85,54 @@ class UploadProgressDialog(
 
 }
 
-fun AppCompatActivity.uploadWithProgressDialog(
-    build: (suspend (UploadProgressDialog) -> Unit),
-) {
-    uploadWithProgressDialog(build, null)
-}
-
-fun AppCompatActivity.uploadWithProgressDialog(
+private fun launchProgressDialog(
+    lifecycleScope: LifecycleCoroutineScope,
+    fragmentManager: FragmentManager,
     build: (suspend (UploadProgressDialog) -> Unit),
     onCancel: (() -> Unit)? = null,
     fragmentTag: String? = "UploadProgressDialog",
 ) {
-    this.lifecycleScope.launch {
+    lifecycleScope.launch {
         UploadProgressDialog {
             cancel()
 
             onCancel?.invoke()
         }.apply {
-            show(this@uploadWithProgressDialog.supportFragmentManager, fragmentTag)
+            show(fragmentManager, fragmentTag)
 
             build(this@apply)
         }
     }
 }
+
+fun Fragment.uploadWithProgressDialog(
+    build: (suspend (UploadProgressDialog) -> Unit),
+    onCancel: (() -> Unit)? = null,
+    fragmentTag: String? = "UploadProgressDialog",
+) = launchProgressDialog(
+    lifecycleScope,
+    childFragmentManager,
+    build,
+    onCancel,
+    fragmentTag
+)
+
+fun Fragment.uploadWithProgressDialog(build: (suspend (UploadProgressDialog) -> Unit)) =
+    uploadWithProgressDialog(build, null)
+
+
+fun AppCompatActivity.uploadWithProgressDialog(
+    build: (suspend (UploadProgressDialog) -> Unit),
+) = uploadWithProgressDialog(build, null)
+
+fun AppCompatActivity.uploadWithProgressDialog(
+    build: (suspend (UploadProgressDialog) -> Unit),
+    onCancel: (() -> Unit)? = null,
+    fragmentTag: String? = "UploadProgressDialog",
+) = launchProgressDialog(
+    lifecycleScope,
+    supportFragmentManager,
+    build,
+    onCancel,
+    fragmentTag
+)
