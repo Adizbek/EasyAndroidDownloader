@@ -16,4 +16,11 @@ class JokeRepository(private val jokeService: JokeService) {
         }
     }
 
+    fun nonExistsEndpoint(): NetworkResource<HashMap<String, String>> {
+        return object: NetworkResource<HashMap<String, String>>() {
+            override suspend fun getApiRequest(): HashMap<String, String> {
+                return jokeService.notExistsGet()
+            }
+        }
+    }
 }

@@ -6,13 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.adizbek.easydownload.R
 import com.github.adizbek.easydownload.api.UploadService
-import com.github.adizbek.easydownload.library.helpers.getFileInfo
 import com.github.adizbek.easydownload.library.helpers.filePicker
-import com.github.adizbek.easydownload.library.http.progress.UploadProgressDialog
+import com.github.adizbek.easydownload.library.helpers.getFileInfo
 import com.github.adizbek.easydownload.library.http.progress.uploadWithProgressDialog
+import com.github.adizbek.easydownload.repository.JokeRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_upload.*
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,6 +21,9 @@ class UploadActivity : AppCompatActivity() {
 
     @Inject
     lateinit var uploadService: UploadService
+
+    @Inject
+    lateinit var jokeRepository: JokeRepository
 
 
     val pickFile = filePicker { uri: Uri? ->
@@ -45,6 +47,15 @@ class UploadActivity : AppCompatActivity() {
 
         upload_btn.setOnClickListener {
             pickFile.launch("*/*")
+        }
+
+        lifecycleScope.launch {
+            try {
+                val result = jokeRepository.nonExistsEndpoint().call()
+            } catch (e: Exception) {
+                println(e.message)
+                println(e.javaClass.name)
+            }
         }
     }
 

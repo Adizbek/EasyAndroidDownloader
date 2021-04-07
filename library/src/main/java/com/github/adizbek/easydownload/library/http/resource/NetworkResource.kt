@@ -11,10 +11,13 @@ class SuccessResource<T>(
 ) : Resource<T>()
 
 class ErrorResource<T>(
+    val err: Throwable,
     val data: T?
 ) : Resource<T>()
 
 class LoadingResource<T> : Resource<T>()
+
+class FailedNetworkRequest() : Error()
 
 abstract class NetworkResource<R> {
 
@@ -24,20 +27,33 @@ abstract class NetworkResource<R> {
 
     abstract suspend fun getApiRequest(): R
 
+
+    @Throws(Error::class)
     @WorkerThread
-    suspend fun call() {
+    suspend fun call(): R {
         isLoading.postValue(true)
         data.postValue(LoadingResource())
 
-        val response = getApiRequest()
+        var response: R
 
-        if (isSuccess(response)) {
-            data.postValue(SuccessResource(response))
-        } else {
-            data.postValue(ErrorResource(response))
+        try {
+            response = getApiRequest()
+
+            if (isSuccess(response)) {
+                data.postValue(SuccessResource(response))
+            } else {
+                data.postValue(ErrorResource(FailedNetworkRequest(), response))
+            }
+        } catch (e: Throwable) {
+            data.postValue(ErrorResource(e, null))
+
+            throw e
+        } finally {
+            isLoading.postValue(false)
         }
 
-        isLoading.postValue(false)
+
+        return response
     }
 
     fun asLiveData() = data as LiveData<Resource<R>>

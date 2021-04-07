@@ -8,4 +8,6 @@ interface JokeService {
     @GET("random_ten")
     suspend fun getRandomJokes(): ArrayList<Joke>
 
+    @GET("NOT_EXISTS")
+    suspend fun notExistsGet(): HashMap<String, String>
 }
