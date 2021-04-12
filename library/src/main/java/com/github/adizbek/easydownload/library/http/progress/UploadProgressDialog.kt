@@ -136,7 +136,7 @@ fun Fragment.uploadWithProgressDialog(
     fragmentTag: String? = "UploadProgressDialog",
 ) = launchProgressDialog(
     lifecycleScope,
-    childFragmentManager,
+    requireFragmentManager(),
     build,
     onCancel,
     fragmentTag
