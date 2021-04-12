@@ -51,6 +51,11 @@ class UploadActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_upload)
 
+        TestUploadFragment().show(supportFragmentManager, null)
+//        val tr = supportFragmentManager.beginTransaction()
+//        tr.replace(R.id.testUpload, TestUploadFragment())
+//        tr.commit()
+
         upload_btn.setOnClickListener {
             pickFile.launch("*/*")
         }

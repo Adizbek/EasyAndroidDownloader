@@ -101,7 +101,13 @@ class UploadProgressDialog(
     }
 
     fun trackProgress(uri: Uri, partName: String = "file"): MultipartBody.Part {
-        return uri.toMultiPartData(partName, _progress)
+        val part = uri.toMultiPartData(partName)
+
+        if (part.body is FileDataRequestBody) {
+            _progress.attach(part.body as FileDataRequestBody)
+        }
+
+        return part
     }
 
 }
@@ -136,7 +142,7 @@ fun Fragment.uploadWithProgressDialog(
     fragmentTag: String? = "UploadProgressDialog",
 ) = launchProgressDialog(
     lifecycleScope,
-    requireFragmentManager(),
+    parentFragmentManager,
     build,
     onCancel,
     fragmentTag

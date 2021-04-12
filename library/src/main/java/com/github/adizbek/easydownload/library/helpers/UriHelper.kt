@@ -4,7 +4,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import com.blankj.utilcode.util.Utils
 import com.github.adizbek.easydownload.library.http.progress.FileDataRequestBody
-import com.github.adizbek.easydownload.library.http.progress.MultiPartUploadProgress
 import okhttp3.MultipartBody
 import java.io.FileNotFoundException
 import java.io.InputStream
@@ -34,16 +33,16 @@ fun Uri.getFileInfo(): UriFileData {
     return UriFileData(this, name, size, mime)
 }
 
+fun Uri.toMultiPartRequest(): FileDataRequestBody {
+    return FileDataRequestBody(getFileInfo())
+}
+
 fun Uri.toMultiPartData(
     partName: String = "file",
-    progressListener: MultiPartUploadProgress? = null,
 ): MultipartBody.Part {
-    val fileData = getFileInfo()
-    val requestFile = FileDataRequestBody(fileData)
+    val requestFile = this.toMultiPartRequest()
 
-    progressListener?.attach(requestFile)
-
-    return MultipartBody.Part.createFormData(partName, fileData.fileName, requestFile)
+    return MultipartBody.Part.createFormData(partName, requestFile.filename(), requestFile)
 }
 
 data class UriFileData(
