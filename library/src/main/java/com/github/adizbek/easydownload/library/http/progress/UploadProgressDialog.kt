@@ -114,15 +114,17 @@ private fun launchProgressDialog(
     fragmentTag: String? = "UploadProgressDialog",
 ) {
     lifecycleScope.launchWhenStarted {
-        UploadProgressDialog {
-            cancel()
+        withContext(Dispatchers.Main) {
+            UploadProgressDialog {
+                cancel()
 
-            onCancel?.invoke()
-        }.apply {
-            show(fragmentManager, fragmentTag)
+                onCancel?.invoke()
+            }.apply {
+                show(fragmentManager, fragmentTag)
 
-            withContext(Dispatchers.IO) {
-                build(this@apply)
+                withContext(Dispatchers.IO) {
+                    build(this@apply)
+                }
             }
         }
     }

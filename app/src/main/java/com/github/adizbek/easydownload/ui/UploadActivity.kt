@@ -12,7 +12,9 @@ import com.github.adizbek.easydownload.library.http.progress.uploadWithProgressD
 import com.github.adizbek.easydownload.repository.JokeRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_upload.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -31,12 +33,16 @@ class UploadActivity : AppCompatActivity() {
             pickedFile = uri
             tv_filename.text = uri.getFileInfo().displayString()
 
-            uploadWithProgressDialog {
-                val file = it.trackProgress(uri)
-                val file1 = it.trackProgress(uri)
-                val file2 = it.trackProgress(uri)
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    uploadWithProgressDialog {
+                        val file = it.trackProgress(uri)
+                        val file1 = it.trackProgress(uri)
+                        val file2 = it.trackProgress(uri)
 
-                uploadService.uploadFile(file, file1, file2)
+                        uploadService.uploadFile(file, file1, file2)
+                    }
+                }
             }
         }
     }
