@@ -30,13 +30,13 @@ val Long.toPrettyBytes: String
                 "$this b"
             }
             this < SIZE_MB -> {
-                "${this.toKb} Kb"
+                "%d Kb".format(this / SIZE_KB)
             }
             this < SIZE_GB -> {
-                "${this.toMb} Mb"
+                "%.2f Mb".format(1f * this / SIZE_MB)
             }
             else -> {
-                "${this.toGb} Gb"
+                "%.2f Gb".format(1f * this / SIZE_GB)
             }
         }
     }
